@@ -1,0 +1,45 @@
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    restart: unless-stopped
+    environment:
+      TZ: America/Fortaleza
+    volumes:
+      - homeassistant_config:/config
+    ports:
+      # Acesso local na VPS ou pelo túnel SSH.
+      - "127.0.0.1:8123:8123"
+    depends_on:
+      - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto/config:/mosquitto/config:ro
+      - mosquitto_data:/mosquitto/data
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+networks:
+  default:
+    # Mantém a faixa estável para configurá-la como proxy confiável
+    # no Home Assistant, mesmo se a rede Docker for recriada.
+    ipam:
+      config:
+        - subnet: 172.28.50.0/24
+
+volumes:
+  homeassistant_config:
+  mosquitto_data:
+  caddy_data:
+  caddy_config:

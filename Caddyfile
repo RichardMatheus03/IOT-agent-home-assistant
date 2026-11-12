@@ -1,0 +1,3 @@
+richard.wiki.br {
+    reverse_proxy homeassistant:8123
+}
